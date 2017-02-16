@@ -108,7 +108,8 @@ let config =
       if p = null then
         None
       else
-        Some(unbox p |> int)
+        let port = unbox p
+        Some(port |> string |> int)
     let ip127  = "127.0.0.1"
     let ipZero = "0.0.0.0"
 
