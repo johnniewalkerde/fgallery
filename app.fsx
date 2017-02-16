@@ -103,14 +103,20 @@ let speciesSorted =
 
 
 let config = 
-    let port = System.Environment.GetEnvironmentVariable("PORT")
-    let ip127  = IPAddress.Parse("127.0.0.1")
-    let ipZero = IPAddress.Parse("0.0.0.0")
+    let port = 
+      let p = box (System.Environment.GetEnvironmentVariable("PORT")) 
+      if p = null then
+        None
+      else
+        Some(p :?> int)
+    let ip127  = "127.0.0.1"
+    let ipZero = "0.0.0.0"
 
     { defaultConfig with 
-        logger = Logging.Loggers.saneDefaultsFor Logging.LogLevel.Verbose
-        bindings=[ (if port = null then HttpBinding.mk HTTP ip127 (uint16 8080)
-                    else HttpBinding.mk HTTP ipZero (uint16 port)) ] }
+        //logger = Logging.Loggers.saneDefaultsFor Logging.LogLevel.Verbose
+        bindings=[ (match port with 
+                     | None -> HttpBinding.createSimple HTTP ip127 8080
+                     | Some p -> HttpBinding.createSimple HTTP ipZero p) ] }
 
 let text = 
     [ yield "<html><body><ul>"
