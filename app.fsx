@@ -108,7 +108,7 @@ let config =
       if p = null then
         None
       else
-        Some(p :?> int)
+        Some(unbox p |> int)
     let ip127  = "127.0.0.1"
     let ipZero = "0.0.0.0"
 
