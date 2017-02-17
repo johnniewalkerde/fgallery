@@ -11,6 +11,7 @@ Paket.Dependencies.Install (System.IO.File.ReadAllText "paket.dependencies")
 #r "packages/Suave/lib/net40/Suave.dll"
 
 open System
+open System.IO
 open Suave                 // always open suave
 open Suave.Http
 open Suave.Filters
@@ -101,7 +102,6 @@ let speciesSorted =
       |> Seq.sortBy (snd >> (~-))
       |> Seq.toList
 
-
 let config = 
     let port = 
       let p = box (System.Environment.GetEnvironmentVariable("PORT")) 
@@ -114,7 +114,7 @@ let config =
     let ipZero = "0.0.0.0"
 
     { defaultConfig with 
-        //logger = Logging.Loggers.saneDefaultsFor Logging.LogLevel.Verbose
+        logger = Logging.Targets.create Logging.Verbose [||]
         bindings=[ (match port with 
                      | None -> HttpBinding.createSimple HTTP ip127 8080
                      | Some p -> HttpBinding.createSimple HTTP ipZero p) ] }
@@ -171,14 +171,7 @@ let homePage =
       yield """  <table class="table table-striped">"""
       yield """   <thead><tr><th>Page</th><th>Link</th></tr></thead>"""
       yield """   <tbody>"""
-      yield """      <tr><td>Endangered Animals</td><td><a href="/animals">Link to animals</a></td></tr>""" 
-      yield """      <tr><td>Things</td><td><a href="/things/10">Link to things (10)</a></td></tr>""" 
-      yield """      <tr><td>Things</td><td><a href="/things/100">Link to things (100)</a></td></tr>""" 
-      yield """      <tr><td>API JSON</td><td><a href="/api/json/100">Link to result (100)</a></td></tr>"""
-      yield """      <tr><td>API XML</td><td><a href="/api/xml/100">Link to result (100)</a></td></tr>"""
-      yield """      <tr><td>API JSON</td><td><a href="/api/json/10">Link to result (10)</a></td></tr>"""
-      yield """      <tr><td>API XML</td><td><a href="/api/xml/10">Link to result (10)</a></td></tr>"""
-      yield """      <tr><td>Goodbye</td><td><a href="/goodbye">Link</a></td></tr>"""
+      yield """      <tr><td>Bilder</td><td><a href="/bilder">Link</a></td></tr>"""
       yield """   </tbody>"""
       yield """  </table>"""
       yield """ </body>""" 
@@ -209,7 +202,13 @@ let xmlText n =
     <menuitem value="Open" />
     <menuitem value="Close"  />
   </popup>
-</menu>""" 
+</menu>"""
+
+let bilder () =
+    let files = "data" |> Directory.EnumerateFiles |> Seq.toList
+    match files with
+    | [] -> "Keine Bilder da!"
+    | _ -> files |> List.map (fun s -> "<img src='" + s + "' />") |> List.reduce (fun sum s -> sum + "<br />" + s) 
 
 let xmlMime = Writers.setMimeType "application/xml"
 let jsonMime = Writers.setMimeType "application/json"
@@ -223,7 +222,9 @@ let app =
                   pathScan "/api/json/%d" (fun n -> jsonMime >=> OK (jsonText n))
                   path "/api/xml" >=> xmlMime >=> OK (xmlText 100)
                   pathScan "/api/xml/%d" (fun n -> xmlMime >=> OK (xmlText n))
-                  path "/goodbye" >=> OK "Good bye GET" ]
+                  path "/goodbye" >=> OK "Good bye GET"
+                  path "/bilder" >=> OK (bilder ())
+                  pathScan "/%s" (fun file -> Files.browseFile "" file) ]
       POST >=> choose
                 [ path "/hello" >=> OK "Hello POST"
                   path "/goodbye" >=> OK "Good bye POST" ] ]
