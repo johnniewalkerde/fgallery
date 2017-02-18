@@ -124,7 +124,7 @@ let app =
                 [ path "/hello" >=> OK "Hello POST"
                   path "/goodbye" >=> OK "Good bye POST" ] ]
     
-#if INTERACTIVE
+#if DO_NOT_START_SERVER
 #else
 startWebServer config app
 printfn "exiting server..."
