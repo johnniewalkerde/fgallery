@@ -40,7 +40,8 @@ let config =
                      | Some p -> HttpBinding.createSimple HTTP ipZero p) ] }
 
 let angularHeader = """<head>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="css/bulma.css">
+<link rel="stylesheet" href="css/site.css">
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
 </head>"""
 
@@ -90,22 +91,21 @@ let jsonText n =
   }
 }}""" 
 
-let xmlText n = 
-    """
-<menu id="file" value="File">
-  <popup>
-""" + String.concat "\n"
-      [ for i in 1 .. n -> sprintf """<menuitem value="%d" />""" i ] + """
-    <menuitem value="Open" />
-    <menuitem value="Close"  />
-  </popup>
-</menu>"""
-
 let bilder () =
     let files = "data" |> Directory.EnumerateFiles |> Seq.toList
     match files with
     | [] -> "Keine Bilder da!"
-    | _ -> files |> List.map (fun s -> "<img src='" + s + "' />") |> List.reduce (fun sum s -> sum + "<br />" + s) 
+    | _ -> 
+        let str =
+            files |> List.map (fun s -> "<div class='tile is-parent'><div class='column has-text-centered is-child notification is-info'><img class='center-cropped' src='" + s + "' /></div></div>") |> List.reduce (+)
+        seq { 0 .. 10 } 
+          |> Seq.mapi (fun x i -> 
+            match i with
+            | 0 -> "<div class='columns'>" + str
+            | index when index % 3 = 0 -> "</div><div class='columns'>" + str
+            | index when index = 10 -> str + "</div>"
+            | _ -> str)
+          |> Seq.reduce (+)
 
 let xmlMime = Writers.setMimeType "application/xml"
 let jsonMime = Writers.setMimeType "application/json"
@@ -113,12 +113,7 @@ let app =
   choose
     [ GET >=> choose
                 [ path "/" >=> OK homePage
-                  pathScan "/things/%d" (fun n -> OK (thingsText n))
-                  path "/api/json" >=> jsonMime >=> OK (jsonText 100)
-                  pathScan "/api/json/%d" (fun n -> jsonMime >=> OK (jsonText n))
-                  path "/api/xml" >=> xmlMime >=> OK (xmlText 100)
-                  pathScan "/api/xml/%d" (fun n -> xmlMime >=> OK (xmlText n))
-                  path "/bilder" >=> OK (bilder ())
+                  path "/bilder" >=> OK (angularHeader + "<div class='container'>" + bilder () + "</div>")
                   pathScan "/%s" (fun file -> Files.browseFile "" file) ]
       POST >=> choose
                 [ path "/hello" >=> OK "Hello POST"

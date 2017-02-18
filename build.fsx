@@ -1,3 +1,12 @@
+System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
+if not (System.IO.File.Exists "paket.exe") then 
+  let url = "http://github.com/fsprojects/Paket/releases/download/3.35.3/paket.exe" in 
+    use wc = new System.Net.WebClient() in 
+      let tmp = System.IO.Path.GetTempFileName() in 
+        wc.DownloadFile(url, tmp); System.IO.File.Move(tmp,System.IO.Path.GetFileName url);;
+#r "paket.exe"
+Paket.Dependencies.Install (System.IO.File.ReadAllText "paket.dependencies")
+
 // include Fake lib
 #r @"packages/FSharp.Compiler.Service/lib/net45/FSharp.Compiler.Service.dll"
 #r @"packages/Suave/lib/net40/Suave.dll"
@@ -7,8 +16,6 @@ open Suave
 open System
 open System.IO
 open Microsoft.FSharp.Compiler.Interactive.Shell
-
-System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 let sbOut = new Text.StringBuilder()
 let sbErr = new Text.StringBuilder()
