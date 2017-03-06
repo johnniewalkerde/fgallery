@@ -17,8 +17,8 @@ open System
 open System.IO
 open Microsoft.FSharp.Compiler.Interactive.Shell
 
-let sbOut = new Text.StringBuilder()
-let sbErr = new Text.StringBuilder()
+let sbOut = Text.StringBuilder()
+let sbErr = Text.StringBuilder()
 
 let fsiSession =
   let inStream = new StringReader("")
