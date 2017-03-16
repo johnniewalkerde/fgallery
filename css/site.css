@@ -5,4 +5,4 @@
   width: 100px;
 }
 
-div:hover .is-child.notification.is-info { background-color: green; }
+div.is-child.notification.is-info:hover { background-color: #23d160; }
